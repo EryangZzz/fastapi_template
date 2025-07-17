@@ -1,8 +1,18 @@
 """
 统一响应格式处理
 """
+from enum import Enum
 from typing import Any
 from fastapi.responses import JSONResponse
+
+
+class CustomerBusinessCode(Enum):
+    """业务响应码枚举"""
+    SUCCESS = 200  # 成功
+    FAILED = -1   # 失败(需要将信息展示给用户)
+    SERVER_ERROR = 500  # 服务器未知错误
+    BAD_REQUEST = 400   # 请求参数错误
+    UNAUTHORIZED = 401  # 身份认证失败
 
 
 class CustomerJsonResponse(JSONResponse):
@@ -19,8 +29,8 @@ class CustomerJsonResponse(JSONResponse):
         else:
             # 自动包装为统一格式（使用纯字典，避免Pydantic干扰）
             processed_content = {
-                "code": status_code if status_code < 400 else status_code,
-                "msg": "success" if status_code < 400 else "error",
+                "code": CustomerBusinessCode.SUCCESS.value if status_code == 200 else status_code,
+                "msg": "success" if status_code == 200 else "error",
                 "data": content
             }
         

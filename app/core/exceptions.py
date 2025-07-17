@@ -1,49 +1,37 @@
 """
-全局异常处理器
+自定义异常类
 """
-from typing import Union
-from fastapi import Request
-from fastapi.exceptions import RequestValidationError
-from pydantic import ValidationError
-
-from app.core.responses import CustomerJsonResponse
+from typing import Any
+from app.core.responses import CustomerBusinessCode
 
 
-async def validation_exception_handler(request: Request, exc: Union[RequestValidationError, ValidationError]):
-    """处理 Pydantic 校验异常"""
-    errors = []
-    for error in exc.errors():
-        errors.append({
-            "field": " -> ".join(str(loc) for loc in error["loc"]),
-            "message": error["msg"],
-            "type": error["type"]
-        })
+class CustomerException(Exception):
+    """自定义业务异常类"""
     
-    return CustomerJsonResponse(
-        content={
-            "code": 422,
-            "msg": "参数校验失败",
-            "data": {"errors": errors}
-        },
-        status_code=422
-    )
+    def __init__(
+        self,
+        msg: str = "",
+        custom_code: CustomerBusinessCode = CustomerBusinessCode.FAILED,
+        content: Any = None,
+        status_code: int = 200,
+    ):
+        """
+        初始化自定义异常
+        
+        Args:
+            msg: 错误消息
+            custom_code: 业务错误码，默认为FAILED(-1)
+            content: 额外数据内容
+            status_code: HTTP状态码，默认为200
+        """
+        # 校验custom_code是否为CustomerBusinessCode枚举类型
+        assert isinstance(
+            custom_code, CustomerBusinessCode
+        ), "custom_code must be CustomerBusinessCode"
+        
+        self.msg = msg
+        self.custom_code = custom_code
+        self.content = content
+        self.status_code = status_code
+        super().__init__(self.msg)
 
-
-async def general_exception_handler(request: Request, exc: Exception):
-    """处理通用异常"""
-    from app.settings.config import settings
-    
-    # 在生产环境中，不应该暴露详细的错误信息
-    if settings.debug:
-        error_detail = str(exc)
-    else:
-        error_detail = "服务器内部错误"
-    
-    return CustomerJsonResponse(
-        content={
-            "code": 500,
-            "msg": error_detail,
-            "data": None
-        },
-        status_code=500
-    ) 

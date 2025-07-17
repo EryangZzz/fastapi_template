@@ -1,144 +1,254 @@
-# FastAPI 脚手架模板 - 单文件版本
+# FastAPI Template
 
-这是一个 FastAPI 脚手架的单文件版本，实现了需求点 4、5、6：
+[English](README_EN.md) | [中文](README.md)
 
-## 实现的功能
+A production-ready FastAPI template with modular architecture, global exception handling, unified response format, and comprehensive development tools.
 
-### 4. 全局异常处理机制 ✅
-- 处理 Pydantic 校验异常 (`RequestValidationError`, `ValidationError`)
-- 处理通用异常 (`Exception`)
-- 异常信息格式化，开发环境显示详细信息，生产环境隐藏敏感信息
+## ✨ Features
 
-### 5. 统一 JSON 响应处理 ✅
-- 所有接口返回统一格式：`{code: xx, msg: xx, data: xx}`
-- 自动处理 Python 对象、Pydantic 模型等不同类型的返回值
-- 对接口无感，自动包装响应
+- 🚀 **High Performance**: Built with FastAPI and uvloop for maximum speed
+- 🏗️ **Modular Architecture**: Clean separation of concerns with layered structure
+- 🔧 **Global Exception Handling**: Comprehensive error handling with business code system
+- 📝 **Unified Response Format**: Consistent API response structure across all endpoints
+- 🎯 **Custom JSON Encoding**: Enhanced serialization for datetime and decimal types
+- ⚙️ **Configuration Management**: Environment-based configuration with Pydantic Settings
+- 🧪 **Testing Ready**: Pre-configured testing setup with pytest and httpx
+- 📦 **Modern Dependency Management**: Using uv for fast and reliable package management
+- 🔄 **Database Ready**: SQLAlchemy 2.0 and Alembic integration (ready to use)
+- 📊 **API Versioning**: Built-in API versioning support
 
-### 6. 精简的 app 启动文件 ✅
-- 精简的启动逻辑，只包含核心配置
-- 中间件注册 (CORS)
-- 异常处理器注册
-- 使用 uvloop 高性能事件循环
-- 使用 uvicorn 启动服务
+## 🏛️ Architecture
 
-## 快速开始
-
-### 1. 安装依赖
-```bash
-cd fastapi_template
-uv sync
+```
+app/
+├── core/                   # Core functionality
+│   ├── exceptions.py       # Custom exception classes
+│   ├── exception_handlers.py # Global exception handlers
+│   ├── responses.py        # Response models and business codes
+│   └── json_encoders.py    # Custom JSON encoders
+├── routers/               # API routing
+│   ├── v1/               # API version 1
+│   └── test/             # Test endpoints
+├── schemas/              # Pydantic models
+├── models/               # Database models
+├── controllers/          # Request controllers
+├── services/             # Business logic
+├── settings/             # Configuration
+└── utils/                # Utility functions
 ```
 
-### 2. 创建环境变量文件（可选）
-```bash
-# 创建 .env 文件
-echo "APP_NAME=FastAPI Template" > .env
-echo "APP_VERSION=0.1.0" >> .env
-echo "DEBUG=true" >> .env
-```
+## 🚦 Quick Start
 
-### 3. 运行服务
-```bash
-# 方式1：直接运行
-uv run python main.py
+### Prerequisites
 
-# 方式2：使用 uvicorn
-uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+- Python 3.12+
+- [uv](https://github.com/astral-sh/uv) (recommended) or pip
 
-## 测试接口
+### Installation
 
-### 1. 基础接口测试
-```bash
-# 根路径 - 测试统一响应格式
-curl http://localhost:8000/
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/fastapi-template.git
+   cd fastapi-template
+   ```
 
-# 健康检查 - 测试 Pydantic 模型响应
-curl http://localhost:8000/health
-```
+2. **Install dependencies**
+   ```bash
+   # Using uv (recommended)
+   uv sync
+   
+   # Or using pip
+   pip install -e .
+   ```
 
-### 2. 参数校验测试
-```bash
-# 正确的请求
-curl -X POST http://localhost:8000/users \
-  -H "Content-Type: application/json" \
-  -d '{"name": "张三", "email": "zhangsan@example.com", "age": 25}'
+3. **Set up environment (optional)**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-# 错误的请求 - 测试参数校验异常
-curl -X POST http://localhost:8000/users \
-  -H "Content-Type: application/json" \
-  -d '{"name": "", "email": "invalid-email", "age": "not-a-number"}'
-```
+4. **Run the application**
+   ```bash
+   # Development mode
+   uv run python main.py
+   
+   # Or using uvicorn directly
+   uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-### 3. 异常处理测试
-```bash
-# 测试 Pydantic 校验异常
-curl http://localhost:8000/test-validation-error
+The application will be available at `http://localhost:8000`
 
-# 测试通用异常处理
-curl http://localhost:8000/test-general-error
-```
+## 📖 API Documentation
 
-## 响应格式示例
+Once the application is running, you can access:
 
-### 成功响应
+- **Interactive API Documentation (Swagger UI)**: http://localhost:8000/docs
+- **ReDoc Documentation**: http://localhost:8000/redoc
+- **OpenAPI Schema**: http://localhost:8000/openapi.json
+
+### Response Format
+
+All API endpoints return responses in the following unified format:
+
 ```json
 {
   "code": 200,
-  "msg": "success",
+  "msg": "success", 
   "data": {
-    "message": "FastAPI Template is running!"
+    // Your actual data here
   }
 }
 ```
 
-### 校验错误响应
-```json
+### Business Codes
+
+| Code | Description |
+|------|-------------|
+| 200  | SUCCESS     |
+| -1   | FAILURE     |
+| 400  | BAD_REQUEST |
+| 401  | UNAUTHORIZED|
+| 500  | SERVER_ERROR|
+
+### Example Endpoints
+
+**Health Check**
+```bash
+GET /api/v1/health
+```
+
+**Test Endpoints**
+```bash
+# Test validation error handling
+GET /api/test/test/test-validation-error
+
+# Test general error handling  
+GET /api/test/test/test-general-error
+
+# Test datetime formatting
+GET /api/test/test/test-datetime
+
+# Test user creation
+POST /api/test/test/users
+Content-Type: application/json
 {
-  "code": 422,
-  "msg": "参数校验失败",
-  "data": {
-    "errors": [
-      {
-        "field": "age",
-        "message": "Input should be a valid integer",
-        "type": "int_parsing"
-      }
-    ]
-  }
+  "name": "John Doe",
+  "email": "john@example.com", 
+  "age": 30
 }
 ```
 
-### 服务器错误响应
-```json
-{
-  "code": 500,
-  "msg": "服务器内部错误",
-  "data": null
-}
+## ⚙️ Configuration
+
+The application uses environment-based configuration. Create a `.env` file in the root directory:
+
+```env
+# Application
+APP_NAME=FastAPI Template
+APP_VERSION=1.0.0
+DEBUG=true
+
+# Server
+HOST=0.0.0.0
+PORT=8000
+
+# Database (when needed)
+DATABASE_URL=postgresql://user:password@localhost/dbname
 ```
 
-## 技术特性
+## 🧪 Testing
 
-- ✅ 使用 Python 3.12
-- ✅ 使用 uv 管理依赖
-- ✅ 使用 uvloop 高性能事件循环
-- ✅ 使用 uvicorn 启动服务
-- ✅ 全局异常处理
-- ✅ 统一响应格式
-- ✅ 精简的启动文件
-- ✅ CORS 中间件支持
-- ✅ 配置文件支持 (.env)
+Run the test suite:
 
-## 下一步
+```bash
+# Run all tests
+uv run pytest
 
-当您测试通过后，我将把单文件版本拆分为完整的脚手架架构，包括：
-- 接口路由层（版本控制）
-- Controller 层
-- Service 层  
-- Models 层
-- Core 层
-- Utils 层
-- Schemas 层
-- Alembic 数据库迁移
-- Tests 层 
+# Run with coverage
+uv run pytest --cov=app
+
+# Run specific test file
+uv run pytest tests/test_health.py
+```
+
+## 🔧 Development
+
+### Adding New Endpoints
+
+1. **Create a new router** in `app/routers/v1/`
+2. **Define Pydantic schemas** in `app/schemas/`
+3. **Add business logic** in `app/services/`
+4. **Register the router** in `app/routers/__init__.py`
+
+Example:
+```python
+# app/routers/v1/users.py
+from fastapi import APIRouter
+from app.schemas.user import UserCreate, UserResponse
+
+router = APIRouter(prefix="/users", tags=["users"])
+
+@router.post("/", response_model=UserResponse)
+async def create_user(user: UserCreate):
+    # Your business logic here
+    return {"message": "User created successfully"}
+```
+
+### Custom Exceptions
+
+Use the `CustomerException` for business logic errors:
+
+```python
+from app.core.exceptions import CustomerException
+from app.core.responses import CustomerBusinessCode
+
+# Raise a business exception
+raise CustomerException(
+    msg="User not found",
+    custom_code=CustomerBusinessCode.BAD_REQUEST,
+    content={"user_id": user_id}
+)
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📋 Roadmap
+
+- [ ] Add authentication and authorization
+- [ ] Add rate limiting middleware
+- [ ] Add request/response logging
+- [ ] Add database migration examples
+- [ ] Add Docker support
+- [ ] Add CI/CD workflows
+- [ ] Add monitoring and metrics
+
+## 🙏 Acknowledgments
+
+- [FastAPI](https://fastapi.tiangolo.com/) - The web framework
+- [Pydantic](https://pydantic-docs.helpmanual.io/) - Data validation
+- [SQLAlchemy](https://www.sqlalchemy.org/) - Database ORM
+- [uv](https://github.com/astral-sh/uv) - Package management
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Support
+
+If you have any questions or need help, please:
+
+1. Check the [Documentation](https://github.com/yourusername/fastapi-template/wiki)
+2. Search existing [Issues](https://github.com/yourusername/fastapi-template/issues)
+3. Create a new [Issue](https://github.com/yourusername/fastapi-template/issues/new)
+
+---
+
+**⭐ Star this repository if you find it helpful!** 

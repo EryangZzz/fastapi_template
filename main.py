@@ -8,13 +8,11 @@ from contextlib import asynccontextmanager
 
 import uvloop
 from fastapi import FastAPI
-from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import ValidationError
 
 from app.core.json_encoders import setup_global_json_encoders
 from app.core.responses import CustomerJsonResponse
-from app.core.exceptions import validation_exception_handler, general_exception_handler
+from app.core.exception_handlers import register_exception_handlers
 from app.settings.config import settings
 from app.routers import main_router
 
@@ -38,32 +36,27 @@ async def lifespan(app: FastAPI):
     print("👋 应用关闭")
 
 
-def register_middleware(app: FastAPI) -> None:
+def register_middleware(current_app: FastAPI) -> FastAPI:
     """注册中间件"""
-    app.add_middleware(
+    current_app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],  # 生产环境应该设置具体的域名
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    return current_app
 
 
-def register_exception_handlers(app: FastAPI) -> None:
-    """注册异常处理器"""
-    app.add_exception_handler(RequestValidationError, validation_exception_handler)
-    app.add_exception_handler(ValidationError, validation_exception_handler)
-    app.add_exception_handler(Exception, general_exception_handler)
-
-
-def register_routers(app: FastAPI) -> None:
+def register_routers(current_app: FastAPI) -> FastAPI:
     """注册路由"""
-    app.include_router(main_router)
+    current_app.include_router(main_router)
+    return current_app
 
 
 def create_app() -> FastAPI:
     """创建FastAPI应用实例"""
-    app = FastAPI(
+    current_app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
         lifespan=lifespan,
@@ -71,11 +64,11 @@ def create_app() -> FastAPI:
     )
     
     # 注册组件
-    register_middleware(app)
-    register_exception_handlers(app)
-    register_routers(app)
+    register_middleware(current_app)
+    register_exception_handlers(current_app)
+    register_routers(current_app)
     
-    return app
+    return current_app
 
 
 # =============================================================================

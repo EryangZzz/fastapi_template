@@ -9,6 +9,8 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
 from app.schemas.base import BaseSchema
+from app.core.exceptions import CustomerException
+from app.core.responses import CustomerBusinessCode
 
 router = APIRouter()
 
@@ -112,4 +114,25 @@ async def test_custom_response():
             "timestamp": "2024-01-01T00:00:00Z"
         },
         status_code=200
+    )
+
+
+# ========== 自定义异常测试 ==========
+@router.get("/test-business-exception")
+async def test_business_exception():
+    """测试业务异常处理"""
+    raise CustomerException(
+        msg="用户名已存在", 
+        custom_code=CustomerBusinessCode.FAILED,
+        content={"suggested_names": ["user1", "user2"]}
+    )
+
+
+@router.get("/test-bad-request-exception")
+async def test_bad_request_exception():
+    """测试请求参数异常处理"""
+    raise CustomerException(
+        msg="年龄参数无效",
+        custom_code=CustomerBusinessCode.BAD_REQUEST,
+        content={"field": "age", "value": -1, "min": 0, "max": 120}
     ) 
